@@ -150,48 +150,56 @@ pair <vector<ll>, vector<ll>> calcA(int n, vector <u8> u) {
     }
 }
 
-void generateAllBinaryVectors(vector<pair<bool, vector<int> > >& dynamic_constraints, vector<vector<int>>& vec_u,
-                              int n, int *arr, int i) {
+void traverseWithRedBitsAndDynamicConstraints(vector<pair<bool, vector<int> > >& dynamic_constraints,
+                              int n, int *arr, int i,
+                              vector<ll>& a, int last_frozen_pos, int word_size, vector<int> red_indexes) {
     if (i == n) {
         vector<int> temp(n, 0);
         for (int j = 0; j < n; ++j) {
             temp.at(j) = arr[j];
         }
-        vec_u.push_back(temp);
-        return;
-    }
-    if (!dynamic_constraints.at(i).first) {
-        arr[i] = 0;
-        generateAllBinaryVectors(dynamic_constraints, vec_u, n, arr, i + 1);
-
-        arr[i] = 1;
-        generateAllBinaryVectors(dynamic_constraints, vec_u, n, arr, i + 1);
-    } else {
-
-        arr[i] = 0;
-        if (dynamic_constraints.at(i).second.empty()) {
-            generateAllBinaryVectors(dynamic_constraints, vec_u, n, arr, i + 1);
-        } else {
-            for (int ii = 0; ii < dynamic_constraints.at(i).second.size(); ++ii) {
-                arr[i] = (arr[i] + arr[dynamic_constraints.at(i).second.at(ii)]) % 2;
-            }
-            generateAllBinaryVectors(dynamic_constraints, vec_u, n, arr, i + 1);
-        }
-    }
-}
-
-vector<ll> computeWEFNaive(int n, int s, vector<vector<int>> vec_u) {
-    vector<ll> a(2 * n + 1);
-
-    for (int i = 0; i < vec_u.size(); ++i) {
-        vector<u8> u_short = vector<u8>(vec_u.at(i).begin(), vec_u.at(i).begin() + s);
-        pair <vector<ll>, vector<ll>> f = calcA(n, u_short);
-        if (vec_u.at(i).at(s) == 0) {
+        vector<u8> u_short = vector<u8>(temp.begin(), temp.begin() + last_frozen_pos);
+        pair <vector<ll>, vector<ll>> f = calcA(word_size, u_short);
+        if (temp.at(last_frozen_pos) == 0) {
             a = add(a, f.first);
         } else {
             a = add(a, f.second);
         }
+        return;
     }
+    if (!dynamic_constraints.at(i).first) {
+        if (red_indexes.at(i) == -1) {
+            arr[i] = 0;
+            traverseWithRedBitsAndDynamicConstraints(dynamic_constraints, n, arr,
+                                                     i + 1, a, last_frozen_pos, word_size, red_indexes);
+
+            arr[i] = 1;
+            traverseWithRedBitsAndDynamicConstraints(dynamic_constraints, n, arr,
+                                                     i + 1, a, last_frozen_pos, word_size, red_indexes);
+        } else {
+            arr[i] = red_indexes.at(i);
+            traverseWithRedBitsAndDynamicConstraints(dynamic_constraints, n, arr,
+            i + 1, a, last_frozen_pos, word_size, red_indexes);
+        }
+    } else {
+        arr[i] = 0;
+        if (dynamic_constraints.at(i).second.empty()) {
+            traverseWithRedBitsAndDynamicConstraints(dynamic_constraints, n, arr, i + 1, a, last_frozen_pos, word_size, red_indexes);
+        } else {
+            for (int ii = 0; ii < dynamic_constraints.at(i).second.size(); ++ii) {
+                arr[i] = (arr[i] + arr[dynamic_constraints.at(i).second.at(ii)]) % 2;
+            }
+            traverseWithRedBitsAndDynamicConstraints(dynamic_constraints, n, arr, i + 1, a, last_frozen_pos, word_size, red_indexes);
+        }
+    }
+}
+
+vector<ll> computeWEFNaive(int n, int last_frozen_pos,
+                           vector<pair<bool, vector<int> > >& dynamic_constraints, vector<int> red_indexes_values) {
+    vector<ll> a(2 * n + 1);
+    int arr[last_frozen_pos + 1];
+    traverseWithRedBitsAndDynamicConstraints(dynamic_constraints, last_frozen_pos + 1, arr,
+                                             0, a, last_frozen_pos, n, red_indexes_values);
 
     return a;
 }
@@ -278,19 +286,13 @@ vector<vector<int>> get_monomials_order(vector<vector<int>> monomials) {
     return monomials_order;
 }
 
-vector<ll> computeWEF(int n, int s, vector<vector<int>> vec_u,
+vector<ll> computeWEF(int n, int s,
                       vector<vector<int>> monomials_order,
-                      vector<int> red_indexes) {
+                      vector<int> red_indexes,
+                      vector<pair<bool, vector<int> > >& dynamic_constraints, vector<int> red_indexes_values) {
     if (red_indexes.size() == 0) {
         vector<u8> u_zero(s, 0);
         pair <vector<ll>, vector<ll>> f = calcA(n, u_zero);
-//        cout << "\nf:\n";
-//        for (int i = 0; i < f.first.size(); ++i) {
-//            if (f.first.at(i) != 0) {
-//                cout << i << ": " << f.first.at(i) << ' ';
-//            }
-//        }
-//        cout << "\n\n";
         return f.first;
     } else {
         int f = red_indexes.at(0);
@@ -302,23 +304,6 @@ vector<ll> computeWEF(int n, int s, vector<vector<int>> vec_u,
                 s_set.push_back(red_indexes.at(i));
             }
         }
-        vector<vector<int>> new_vec_u;
-        vector<vector<int>> not_used_vec_u;
-        for (int i = 0; i < vec_u.size(); ++i) {
-            bool all_zeros = true;
-            for (int j = 0; j < s_set.size(); ++j) {
-                if (vec_u.at(i).at(s_set.at(j)) == 1) {
-                    all_zeros = false;
-                }
-            }
-            if (vec_u.at(i).at(f) == 1) {
-                if (all_zeros) {
-                    new_vec_u.push_back(vec_u.at(i));
-                }
-            } else {
-                not_used_vec_u.push_back(vec_u.at(i));
-            }
-        }
 
         vector<int> new_red_indexes;
         for (int i = 0; i < red_indexes.size(); ++i) {
@@ -327,33 +312,18 @@ vector<ll> computeWEF(int n, int s, vector<vector<int>> vec_u,
             }
         }
 
-//        if (f == 15) {
-//            cout << new_vec_u.size() << '\n';
-//            for (int i = 0; i < new_vec_u.size(); ++i) {
-//                for (int j = 0; j < new_vec_u.at(i).size(); ++j) {
-//
-//                    cout << new_vec_u.at(i).at(j) << ' ';
-//                }
-//
-//                cout << '\n';
-//            }
-//        }
-//        cout << "red size: " << red_indexes.size() << '\n';
-//        for (int i = 0; i < red_indexes.size(); ++i) {
-//            cout << red_indexes.at(i) << ' ';
-//        }
-//        cout << '\n';
-//        cout << '\n';
-//        cout << '\n';
-//        cout << "set S size: " << s_set.size() << '\n';
-//        for (int i = 0; i < s_set.size(); ++i) {
-//            cout << s_set.at(i) << ' ';
-//        }
-//        cout << '\n';
+        vector<int> new_red_indexes_values = red_indexes_values;
+        vector<int> new_red_indexes_values_wo_f = red_indexes_values;
+        new_red_indexes_values.at(f) = 1;
+        for (int i = 0; i < s_set.size(); ++i) {
+            new_red_indexes_values.at(s_set.at(i)) = 0;
+        }
+        new_red_indexes_values_wo_f.at(f) = 0;
 
-        vector<ll> result_b = computeWEF(n, s, not_used_vec_u,
-                                         monomials_order, new_red_indexes);
-        vector<ll> result_c = computeWEFNaive(n, s, new_vec_u);
+        vector<ll> result_b = computeWEF(n, s,
+                                         monomials_order, new_red_indexes, dynamic_constraints,
+                                         new_red_indexes_values_wo_f);
+        vector<ll> result_c = computeWEFNaive(n, s, dynamic_constraints, new_red_indexes_values);
 
 
 
@@ -411,17 +381,19 @@ int main() {
     cin >> m >> f_size >> n >> last_frozen_pos;
     vector<int> frozen_bits(n, 0);
     vector<int> red_indexes;
+    vector<int> red_indexes_values(n, -2);
     for (int i = 0; i < frozen_bits.size(); ++i) {
         cin >> frozen_bits.at(i);
         if (frozen_bits.at(i) == 0) {
             if (i< last_frozen_pos) {
                 red_indexes.push_back(i);
+                red_indexes_values.at(i) = -1;
             }
         }
     }
 
 
-    vector<vector<int>> vec_u;
+
     vector<vector<int>> dynamic_constraints_matrix(f_size, vector<int>(n));
 
     for (int i = 0; i < f_size; ++i) {
@@ -451,9 +423,8 @@ int main() {
 //    }
 //    cout << '\n';
 //    cout << '\n';
-    int arr[last_frozen_pos + 1];
-    generateAllBinaryVectors(dynamic_constraints, vec_u, last_frozen_pos + 1, arr, 0);
 
+    cout << '\n';
 //    for (int i = 0; i < vec_u.size(); ++i) {
 //        for (int j = 0; j < vec_u.at(i).size(); ++j) {
 //            cout << vec_u.at(i).at(j) << ' ';
@@ -461,11 +432,11 @@ int main() {
 //        cout << '\n';
 //    }
 
-//    vector<ll> result_large1 = computeWEFNaive(n, last_frozen_pos, vec_u);
+//    vector<ll> result_large1 = computeWEFNaive(n, last_frozen_pos, dynamic_constraints, red_indexes_values);
 //    vector<ll> result1 = vector<ll>(result_large1.begin(), result_large1.end() - result_large1.size() + n + 1);
 //    cout << "\n";
 //    for (int i = 0; i < result1.size(); ++i) {
-//        cout << result1.at(i) << '\n';
+//        cout << i << ": " << result1.at(i) << '\n';
 //    }
 //    cout << "\n";
 //    auto stop = high_resolution_clock::now();
@@ -474,26 +445,9 @@ int main() {
 //    cout << "Time: " << duration.count() << '\n';
     vector<vector<int>> monomials = get_monomials(m);
     vector<vector<int> > monomials_order = get_monomials_order(monomials);
-    vector<ll> result_large = computeWEF(n, last_frozen_pos, vec_u, monomials_order,
-                                         red_indexes);
-//    cout << "monomials:\n";
-//    for (int i = 0; i < monomials.size(); ++i) {
-////        cout << i << ": ";
-//        for (int j = 0; j < monomials.at(i).size(); ++j) {
-//            cout << monomials.at(i).at(j) << ' ';
-//        }
-//        cout << '\n';
-//    }
-//    cout << '\n';
-//    cout << "monomials order:\n";
-//    for (int i = 0; i < monomials_order.size(); ++i) {
-//        cout << i << ": ";
-//        for (int j = 0; j < monomials_order.at(i).size(); ++j) {
-//            cout  << monomials_order.at(i).at(j) << ' ';
-//        }
-//        cout << '\n';
-//    }
-//    cout << '\n';
+    vector<ll> result_large = computeWEF(n, last_frozen_pos, monomials_order,
+                                         red_indexes, dynamic_constraints, red_indexes_values);
+
     vector<ll> result = vector<ll>(result_large.begin(), result_large.end() - result_large.size() + n + 1);
     cout << "\n";
     for (int i = 0; i < result.size(); ++i) {
