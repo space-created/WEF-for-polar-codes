@@ -80,6 +80,26 @@ vector<ll> multiply(vector<ll> const& a, vector<ll> const& b) {
     return res;
 }
 
+vector<ll> multiply2(vector<ll> const& a, vector<ll> const& b) {
+    vector<ll> prod(a.size() + b.size() - 1);
+    // Initialize the porduct polynomial
+    for (int i = 0; i< prod.size(); i++)
+        prod[i] = 0;
+
+    // Multiply two polynomials term by term
+
+    // Take ever term of first polynomial
+    for (int i=0; i<a.size(); i++)
+    {
+        // Multiply the current term of first polynomial
+        // with every term of second polynomial.
+        for (int j=0; j<b.size(); j++)
+            prod[i+j] += a[i] * b[j];
+    }
+
+    return prod;
+}
+
 vector<ll> add(vector<ll> const& a, vector<ll> const& b) {
     int res_size = a.size() > b.size() ? a.size() : b.size();
     vector<ll> result(res_size, 0);
@@ -135,17 +155,17 @@ pair <vector<ll>, vector<ll>> calcA(int n, vector <u8> u) {
         pair <vector<u8>, vector<u8>> even_odd_u = get_even_odd_vectors(u);
         pair <vector<ll>, vector<ll>> f = calcA(n / 2, do_xor(even_odd_u.first, even_odd_u.second));
         pair <vector<ll>, vector<ll>> g = calcA(n / 2, even_odd_u.second);
-        return {add(multiply(f.first, g.first), multiply(f.second, g.second)),
-                add(multiply(f.first, g.second), multiply(f.second, g.first))};
+        return {add(multiply2(f.first, g.first), multiply2(f.second, g.second)),
+                add(multiply2(f.first, g.second), multiply2(f.second, g.first))};
     } else {
         vector<u8> u_short = vector<u8>(u.begin(), u.begin() + i - 1);
         pair <vector<u8>, vector<u8>> even_odd_u = get_even_odd_vectors(u_short);
         pair <vector<ll>, vector<ll>> f = calcA(n / 2, do_xor(even_odd_u.first, even_odd_u.second));
         pair <vector<ll>, vector<ll>> g = calcA(n / 2, even_odd_u.second);
         if (u.at(u.size() - 1) == 0) {
-            return {multiply(f.first, g.first), multiply(f.second, g.second)};
+            return {multiply2(f.first, g.first), multiply2(f.second, g.second)};
         } else {
-            return {multiply(f.first, g.second), multiply(f.second, g.first)};
+            return {multiply2(f.first, g.second), multiply2(f.second, g.first)};
         }
     }
 }
@@ -306,10 +326,10 @@ vector<ll> computeWEF(int n, int s,
         }
 
         vector<int> new_red_indexes;
-        for (int i = 0; i < red_indexes.size(); ++i) {
-            if (red_indexes.at(i) != f) {
+        for (int i = 1; i < red_indexes.size(); ++i) {
+//            if (red_indexes.at(i) != f) {
                 new_red_indexes.push_back(red_indexes.at(i));
-            }
+//            }
         }
 
         vector<int> new_red_indexes_values = red_indexes_values;
@@ -425,12 +445,7 @@ int main() {
 //    cout << '\n';
 
     cout << '\n';
-//    for (int i = 0; i < vec_u.size(); ++i) {
-//        for (int j = 0; j < vec_u.at(i).size(); ++j) {
-//            cout << vec_u.at(i).at(j) << ' ';
-//        }
-//        cout << '\n';
-//    }
+
 
 //    vector<ll> result_large1 = computeWEFNaive(n, last_frozen_pos, dynamic_constraints, red_indexes_values);
 //    vector<ll> result1 = vector<ll>(result_large1.begin(), result_large1.end() - result_large1.size() + n + 1);
