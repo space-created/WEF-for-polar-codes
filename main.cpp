@@ -207,10 +207,6 @@ void traverseWithRedBitsAndDynamicConstraints(vector<pair<bool, vector<int> > >&
             traverseWithRedBitsAndDynamicConstraints(dynamic_constraints, n, arr, i + 1, a, last_frozen_pos, word_size, red_indexes);
         } else {
             for (int ii = 0; ii < dynamic_constraints.at(i).second.size(); ++ii) {
-//                if (i == 26) {
-//                    cout << dynamic_constraints.at(i).second.at(ii) << ' ' << arr[dynamic_constraints.at(i).second.at(ii)];
-//                    cout << '\n';
-//                }
                 arr[i] = (arr[i] + arr[dynamic_constraints.at(i).second.at(ii)]) % 2;
             }
             traverseWithRedBitsAndDynamicConstraints(dynamic_constraints, n, arr, i + 1, a, last_frozen_pos, word_size, red_indexes);
@@ -249,8 +245,6 @@ vector<ll> computeWEFNaive(int n, int last_frozen_pos,
                 }
             }
         }
-
-
         vector<u8> u_short = vector<u8>(cur_vec.begin(), cur_vec.begin() + last_frozen_pos);
 
         pair <vector<ll>, vector<ll>> f = calcA(n, u_short);
@@ -380,7 +374,6 @@ vector<ll> computeWEF(int n, int s,
         for (int i = 0; i < s_set.size(); ++i) {
             new_red_indexes_values.at(s_set.at(i)) = 0;
         }
-        cout << s_set.size() << ' ' << flush;
         new_red_indexes_values_wo_f.at(f) = 0;
         vector<ll> result_b = computeWEF(n, s,
                                          monomials_order, new_red_indexes, dynamic_constraints,
@@ -405,8 +398,8 @@ vector<vector<int>> get_monomials(int n) {
             curRow /= 2;
         }
         vector<int> monomial(n, 0);
-        for (int j = n - 1; j >= 0; --j) {
-            monomial.at(n - 1 - j) = 1 - b.at(j);
+        for (int j = 0; j < n; ++j) {
+            monomial.at(j) = 1 - b.at(n - 1 - j);
         }
         monomials.push_back(monomial);
     }
@@ -430,12 +423,9 @@ int find_the_most_right_one_pos(std::vector<int> &row_vector) {
 int main() {
     cin.tie(nullptr);
     ios_base::sync_with_stdio(false);
-    freopen("input4.txt", "r", stdin);
+    freopen("input1.txt", "r", stdin);
 //    freopen("output.txt", "w", stdout);
 
-//    int apply_constraints = 0;
-//    cin >> apply_constraints;
-//    if (apply_constraints) {
     auto start = high_resolution_clock::now();
     int m, n, f_size, last_frozen_pos;
 
@@ -473,19 +463,6 @@ int main() {
         }
     }
 
-//    for (int i = 0; i < dynamic_constraints.size(); ++i) {
-//        cout << dynamic_constraints.at(i).first << ' ';
-//        for (int j = 0; j < dynamic_constraints.at(i).second.size(); ++j) {
-//            cout << dynamic_constraints.at(i).second.at(j) << ' ';
-//        }
-//        cout << '\n';
-//    }
-//    cout << '\n';
-//    cout << '\n';
-
-    cout << '\n';
-
-
 //    vector<ll> result_large1 = computeWEFNaive(n, last_frozen_pos, dynamic_constraints, red_indexes_values);
 //    vector<ll> result1 = vector<ll>(result_large1.begin(), result_large1.end() - result_large1.size() + n + 1);
 //    cout << "\n";
@@ -497,15 +474,7 @@ int main() {
 //    auto duration = duration_cast<seconds>(stop - start);
 //    cout << '\n';
 //    cout << "Time: " << duration.count() << '\n';
-    vector<vector<int>> monomials = get_monomials(m);
-    for (int i = 0; i < monomials.size(); ++i) {
-        cout << i << ": ";
-        for (int j = 0; j < monomials.at(i).size(); ++j) {
-            cout << monomials.at(i).at(j) << ' ';
-        }
-        cout << "\n";
-    }
-    cout << "\n";
+
     vector<vector<int> > monomials_order = get_monomials_order(monomials);
     vector<ll> result_large = computeWEF(n, last_frozen_pos, monomials_order,
                                          red_indexes, dynamic_constraints, red_indexes_values);
