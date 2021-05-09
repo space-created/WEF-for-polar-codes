@@ -474,7 +474,7 @@ int main() {
 //    auto duration = duration_cast<seconds>(stop - start);
 //    cout << '\n';
 //    cout << "Time: " << duration.count() << '\n';
-
+    vector<vector<int> > monomials = get_monomials(m);
     vector<vector<int> > monomials_order = get_monomials_order(monomials);
     vector<ll> result_large = computeWEF(n, last_frozen_pos, monomials_order,
                                          red_indexes, dynamic_constraints, red_indexes_values);
