@@ -482,7 +482,7 @@ int main() {
     vector<ll> result = vector<ll>(result_large.begin(), result_large.end() - result_large.size() + n + 1);
     cout << "\n";
     for (int i = 0; i < result.size(); ++i) {
-        cout << i << ": " << result.at(i) << '\n';
+        cout << result.at(i) << ' ';
     }
     cout << "\n";
     auto stop1 = high_resolution_clock::now();
@@ -493,3 +493,6 @@ int main() {
     cout << "Time: " << duration1.count() << '\n';
     return 0;
 }
+
+// mbuild optimizer.cpp
+// ./optimizer.exe

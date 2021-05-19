@@ -2,7 +2,7 @@
 CXX = g++
 CXXFLAGS = -g
 EXEC = main
-OBJDIR=dist
+OBJDIR=dist2
 OBJS = $(addprefix $(OBJDIR)/, \
 	main.o)
 
